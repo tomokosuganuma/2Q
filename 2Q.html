@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>勉強・課題Todoアプリ</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Noto+Sans+JP:wght@400;700&display=swap');
+
+    :root {
+      --color-bg: #ffffff;
+      --color-text: #1c2a39;
+      --color-accent: #2c3e50;
+      --color-lightgray: #f0f2f5;
+      --color-gray: #aaa;
+      --color-green-bg: #e6f4ea;
+      --color-complete: #d8e8dc;
+      --color-focus: #3b5998;
+      --color-dc7115: #00B8E6;
+      --color-dark-bg: #0A1A2F;
+      --color-dark-card: #122235;
+      --color-dark-btn: #1f3c56;
+      --color-dark-btn-hover: #275171;
+      --color-complete-button-dark: #00cc88;
+    }
+
+    body.light {
+      background-color: var(--color-bg);
+      color: var(--color-text);
+    }
+
+    body.dark {
+      background-color: var(--color-dark-bg);
+      color: #f1f1f1;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: auto;
+      padding: 2rem 1rem;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    h2 {
+      font-size: 1.2rem;
+      font-weight: 400;
+      color: var(--color-gray);
+      margin-top: 2rem;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 0.75rem;
+      margin-top: 0.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--color-focus);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(59, 89, 152, 0.2);
+    }
+
+    ::placeholder {
+      color: var(--color-gray);
+    }
+
+    button {
+      padding: 0.75rem 1.25rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: 600;
+      background-color: var(--color-accent);
+      color: white;
+      transition: background-color 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #1c2a39;
+    }
+
+    #modeToggleBtn {
+      background-color: #e0e7ef;
+      color: #2c3e50;
+      border: 1px solid #2c3e50;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      margin-bottom: 1.5rem;
+    }
+
+    #modeToggleBtn:hover {
+      background-color: #d4e0ed;
+    }
+
+    .task {
+      background-color: var(--color-lightgray);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      transition: transform 0.2s ease, opacity 0.3s ease;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .task.done {
+      background-color: var(--color-complete);
+    }
+
+    .task-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .complete-button {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .complete-button:hover {
+      background-color: #218838;
+    }
+
+    body.dark .complete-button {
+      background-color: var(--color-complete-button-dark);
+      color: #fff;
+    }
+
+    body.dark .complete-button:hover {
+      background-color: #00b078;
+    }
+
+    #timerPage {
+      padding: 2rem;
+      background-color: var(--color-lightgray);
+      min-height: 100vh;
+      display: none;
+    }
+
+    body.dark #timerPage {
+      background-color: var(--color-dark-bg);
+    }
+
+    #backBtn {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      background-color: #999;
+      font-weight: bold;
+    }
+
+    .circle-timer-wrapper {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      margin: 2rem auto;
+    }
+
+    .circle-timer {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .circle-timer .bg {
+      fill: none;
+      stroke: #ddd;
+      stroke-width: 10;
+    }
+
+    .circle-timer .progress {
+      fill: none;
+      stroke: var(--color-accent);
+      stroke-width: 10;
+      stroke-dasharray: 283;
+      stroke-dashoffset: 283;
+      transition: stroke-dashoffset 1s linear;
+    }
+
+    .timer-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      font-size: 1.4rem;
+      line-height: 1.6;
+      font-weight: 600;
+      color: var(--color-accent);
+      white-space: pre-line;
+    }
+
+    .timer-controls {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    body.dark input,
+    body.dark textarea,
+    body.dark select {
+      background-color: #1c263b;
+      color: #f1f1f1;
+      border: 1px solid #3a4b6b;
+    }
+
+    body.dark input:focus,
+    body.dark textarea:focus,
+    body.dark select:focus {
+      border-color: #5b89ff;
+      box-shadow: 0 0 0 3px rgba(91, 137, 255, 0.3);
+    }
+
+    body.dark ::placeholder {
+      color: #888;
+    }
+
+    body.dark .task {
+      background-color: var(--color-dark-card);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    }
+
+    body.dark .task.done {
+      background-color: #2a4030;
+    }
+
+    body.dark button {
+      background-color: var(--color-dark-btn);
+      color: #fff;
+    }
+
+    body.dark button:hover {
+      background-color: var(--color-dark-btn-hover);
+    }
+
+    body.dark #modeToggleBtn {
+      background-color: #3a4b6b;
+      color: #fff;
+      border: 1px solid #f1f1f1;
+    }
+
+    body.dark #modeToggleBtn:hover {
+      background-color: #4d6187;
+    }
+
+    body.dark #backBtn {
+      background-color: #444;
+      color: #fff;
+    }
+
+    body.dark .timer-text {
+      color: var(--color-dc7115);
+    }
+
+    body.dark .circle-timer .progress {
+      stroke: var(--color-dc7115);
+    }
+
+    body.dark .circle-timer .bg {
+      stroke: #1c2a39;
+    }
+  </style>
+
+
+
+</head>
+
+<body class="light">
+  <div class="container" id="mainPage">
+    <h1>勉強・課題Todoアプリ</h1>
+    <div id="modeToggleWrapper">
+      <button id="modeToggleBtn" onclick="toggleMode()">ダークモード</button>
+    </div>
+    <input type="text" id="subject" placeholder="教科・科目名（例：英語）" />
+    <input type="text" id="taskName" placeholder="やること（例：単語復習）" />
+    <label for="duration">目標時間</label>
+    <select id="duration">
+      <option value="30">30分</option>
+      <option value="60">1時間</option>
+      <option value="90">1時間30分</option>
+      <option value="120">2時間</option>
+      <option value="150">2時間30分</option>
+      <option value="180">3時間</option>
+    </select>
+    <label for="officialDeadline">公式締切（提出日）</label>
+    <input type="date" id="officialDeadline" />
+    <label for="personalDeadline">自分の予定日（やりきり目標）</label>
+    <input type="date" id="personalDeadline" />
+    <button onclick="addTask()">Todo追加</button>
+    <h2>未完了タスク</h2>
+    <div id="taskList"></div>
+    <h2>達成済みタスク</h2>
+    <div id="completedList"></div>
+  </div>
+
+  <div id="timerPage">
+    <button id="backBtn" onclick="goBack()">← 戻る</button>
+    <h2>タイマー画面</h2>
+    <div class="circle-timer-wrapper">
+      <svg class="circle-timer" viewBox="0 0 100 100">
+        <circle class="bg" cx="50" cy="50" r="45"></circle>
+        <circle class="progress" cx="50" cy="50" r="45"></circle>
+      </svg>
+      <div id="timerDisplay" class="timer-text">0:00:00</div>
+    </div>
+    <div class="timer-controls">
+      <button onclick="completeCurrentTask()">完了として記録</button>
+      <button onclick="stopTimer()">ストップ</button>
+    </div>
+  </div>
+
+  <script>
+    const modeToggleBtn = document.getElementById("modeToggleBtn");
+    const mainPage = document.getElementById("mainPage");
+    const timerPage = document.getElementById("timerPage");
+    const timerDisplay = document.getElementById("timerDisplay");
+    const taskList = document.getElementById("taskList");
+    const completedList = document.getElementById("completedList");
+
+    let tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+    let currentTaskIndex = null;
+    let timerInterval;
+
+    function toggleMode() {
+      const isDark = document.body.classList.toggle("dark");
+      document.body.classList.toggle("light", !isDark);
+      modeToggleBtn.textContent = isDark ? "ライトモード" : "ダークモード";
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+    }
+
+    function applySavedTheme() {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "dark") {
+        document.body.classList.add("dark");
+        document.body.classList.remove("light");
+        modeToggleBtn.textContent = "ライトモード";
+      }
+    }
+
+    function loadTasks() {
+      taskList.innerHTML = "";
+      completedList.innerHTML = "";
+      tasks.forEach((task, i) => {
+        const div = document.createElement("div");
+        div.className = "task";
+
+        const info = document.createElement("ul");
+        info.innerHTML = `
+          <li><strong>${task.subject}：${task.name}</strong></li>
+          <li>目標時間: ${task.duration} 分</li>
+          <li>公式締切: ${task.officialDeadline || "未設定"}</li>
+          <li>自分の予定日: ${task.personalDeadline || "未設定"}</li>
+          <li>状態: ${task.done ? "完了" : "未完了"}</li>
+        `;
+
+        const buttonGroup = document.createElement("div");
+        buttonGroup.className = "task-buttons";
+
+        if (!task.done) {
+          const completeBtn = document.createElement("button");
+          completeBtn.textContent = "完了";
+          completeBtn.className = "complete-button";
+          completeBtn.onclick = () => markComplete(i);
+
+          const startBtn = document.createElement("button");
+          startBtn.textContent = "今から始める";
+          startBtn.onclick = () => startTimer(task.duration, i);
+
+          const deleteBtn = document.createElement("button");
+          deleteBtn.textContent = "削除";
+          deleteBtn.onclick = () => deleteTask(i);
+
+          buttonGroup.appendChild(completeBtn);
+          buttonGroup.appendChild(startBtn);
+          buttonGroup.appendChild(deleteBtn);
+
+          div.appendChild(info);
+          div.appendChild(buttonGroup);
+          taskList.appendChild(div);
+        } else {
+          div.appendChild(info);
+          completedList.appendChild(div);
+        }
+      });
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+
+    function addTask() {
+      const subject = document.getElementById("subject").value;
+      const name = document.getElementById("taskName").value;
+      const duration = document.getElementById("duration").value;
+      const officialDeadline = document.getElementById("officialDeadline").value;
+      const personalDeadline = document.getElementById("personalDeadline").value;
+
+      if (!name || !subject) return;
+
+      const task = {
+        subject,
+        name,
+        duration,
+        officialDeadline,
+        personalDeadline,
+        done: false
+      };
+
+      tasks.push(task);
+      loadTasks();
+    }
+
+    function markComplete(index) {
+      tasks[index].done = true;
+      loadTasks();
+    }
+
+    function deleteTask(index) {
+      tasks.splice(index, 1);
+      loadTasks();
+    }
+
+    function startTimer(duration, index) {
+      let timeLeft = parseInt(duration) * 60;
+      currentTaskIndex = index;
+      mainPage.style.display = "none";
+      timerPage.style.display = "block";
+
+      updateTimerDisplay(timeLeft);
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay(timeLeft);
+        if (timeLeft < 0) {
+          clearInterval(timerInterval);
+          alert("時間になりました！おつかれさま！");
+          completeCurrentTask();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay(timeLeft) {
+      const hrs = Math.floor(timeLeft / 3600);
+      const mins = Math.floor((timeLeft % 3600) / 60);
+      const secs = timeLeft % 60;
+      timerDisplay.textContent = `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+      const total = parseInt(tasks[currentTaskIndex].duration) * 60;
+      const progressCircle = document.querySelector(".circle-timer .progress");
+
+      if (progressCircle) {
+        const ratio = timeLeft / total;
+        const offset = 283 * (1 - ratio);
+        progressCircle.style.strokeDashoffset = offset;
+      }
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      alert("タイマーを停止しました。");
+    }
+
+    function completeCurrentTask() {
+      if (currentTaskIndex !== null) {
+        tasks[currentTaskIndex].done = true;
+        currentTaskIndex = null;
+        goBack();
+      }
+    }
+
+    function goBack() {
+      clearInterval(timerInterval);
+      timerPage.style.display = "none";
+      mainPage.style.display = "block";
+      loadTasks();
+    }
+
+    applySavedTheme();
+    loadTasks();
+  </script>
+</body>
